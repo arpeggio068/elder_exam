@@ -1,0 +1,230 @@
+    @font-face {
+        font-family: 'Sarabun';
+        src: url('public/fonts/Sarabun-Light.ttf') format('truetype');
+        font-weight: 300;
+    }
+
+    @font-face {
+        font-family: 'Sarabun';
+        src: url('public/fonts/Sarabun-SemiBold.ttf') format('truetype');
+        font-weight: 600;
+    }
+
+    * {
+      font: 16px 'Sarabun', Arial, sans-serif;
+    }
+
+  
+  h1,h5,h6 {
+    text-align: center;
+    margin-top: 10px;
+  }  
+ 
+  .nav-link{
+      cursor:pointer;   
+      font-size: 1rem;
+  }  
+ 
+   #loading {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 10000;
+    background-color: rgba(255,255,255,0.9);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+    
+  .nav {
+    background-color: #D7FCFB !important;
+  }
+
+  *{
+   box-sizing: border-box;
+  }
+
+  /*body {
+   font: 16px Arial;  
+  }*/
+ 
+  .own-set{
+   padding: 10px;
+   width: 500px;
+   
+  }
+
+  #divMenuUraianKerja{
+      border: 1px solid rgba(0,0,0,0.2);
+      padding: 20px;
+      margin-left:10px;
+      margin-right:10px;
+      margin-top: 15px;
+      background-color: #E3F5EE;
+      font-family: 'Prompt';
+   }
+
+   #divMenuUraianKerja22{
+      border: 1px solid rgba(0,0,0,0.2);
+      padding: 20px;
+      margin-left:10px;
+      margin-right:10px;
+      margin-top: 15px;
+      background-color:#F5EEF8 ;
+      font-family: 'Prompt';
+   }
+
+  div.ui-datepicker, .ui-datepicker input{font-size:110%;}
+
+  label.required::before {
+  content: '*';
+  margin-right: 4px;
+  color: red;
+  }
+
+  #maincontainer{
+    display: none;
+  }
+  
+  p{
+    font-size: 0.8em;
+  } 
+
+  /*.container_cb {
+    display: inline;
+    position: relative;
+    padding-left: 15px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    font-size: 20px;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    }*/
+
+    .container_cb {
+    display: inline-block; /* เปลี่ยนจาก inline เป็น inline-block เพื่อควบคุมขนาดและระยะ */
+    position: relative;
+    padding-left: 17px; /* เพิ่มจาก 15px เป็น 35px ให้เว้นที่สำหรับ checkbox */
+    margin-bottom: 10px;
+    margin-right: 15px;  /*✅ เพิ่มระยะห่างระหว่าง label */
+    cursor: pointer;
+    font-size: 20px;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+
+
+/* Hide the browser's default checkbox */
+.container_cb input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+
+/* Create a custom checkbox */
+.checkmark {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 25px;
+  width: 25px;
+  background-color: #eee;
+}
+
+/* On mouse-over, add a grey background color */
+.container_cb:hover input ~ .checkmark {
+  background-color: #ccc;
+}
+
+/* When the checkbox is checked, add a blue background */
+.container_cb input:checked ~ .checkmark {
+  background-color: #2196F3;
+}
+
+/* Create the checkmark/indicator (hidden when not checked) */
+.checkmark:after {
+  content: "";
+  position: absolute;
+  display: none;
+}
+
+/* Show the checkmark when checked */
+.container_cb input:checked ~ .checkmark:after {
+  display: none;
+}
+
+/* Style the checkmark/indicator */
+.container_cb .checkmark:after {
+  left: 9px;
+  top: 5px;
+  width: 5px;
+  height: 10px;
+  border: solid white;
+  border-width: 0 3px 3px 0;
+  -webkit-transform: rotate(45deg);
+  -ms-transform: rotate(45deg);
+  transform: rotate(45deg);
+}
+
+#detail, #form1, #form2{
+  display: none;
+}
+
+#a_hide{
+  display: block;
+}
+
+#showNeed_dfilling{
+  display: none;
+}
+
+.label_main{
+  color:purple;
+}
+
+.label_main2{
+  color:purple;
+}
+
+.w3-right {
+    float: right!important;
+  }
+
+  table.table-bordered,
+    table.table-bordered th,
+    table.table-bordered td {
+      border: 1px solid #dee2e6 !important;
+  }
+
+    /* เพิ่มเส้นขอบรอบตาราง */
+  table.table-bordered {
+      border-collapse: collapse !important;
+  }
+
+
+  #clearBtn {
+    position: absolute;
+    top: 50%;
+    right: 16px;
+    transform: translateY(-25%);
+    cursor: pointer;
+    color: gray;
+    font-size: 24px; /* <-- ปรับขนาดกากบาทใหญ่ขึ้น */
+    line-height: 1;
+    display: none; /* ซ่อนตอนแรก */
+    user-select: none;
+  }
+
+  #clearBtn:hover {
+    color: red;
+    transform: translateY(-25%) scale(1.2);
+  }

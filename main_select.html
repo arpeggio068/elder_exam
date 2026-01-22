@@ -1,0 +1,52 @@
+        <div class="row my-3" >
+          <div class="col">  
+            <label for="cup">เลือก รพสต.</label>
+            <select id="cup" class="form-select">
+
+            </select>
+          </div>        
+        </div>
+        <div class="row my-3" >            
+            <div class="col">    
+              <button class="btn btn-primary" id="showBtn" onclick="setTable()">แสดง</button>                        
+            </div> 
+            <div class="col">
+              <button class="btn btn-primary w3-right" id="search_cnum" data-toggle="text">ค้นจากข้อความ</button>             
+            </div>      
+        </div>
+        <div class="row my-3" >
+          <div class="col position-relative">  
+            <label for="searchInput" style="color:blue;">ค้นจาก ชื่อ-สกุล หรือท้ายเลข 13 หลัก อย่างน้อย 4 ตัวอักษร</label>
+            <input id="searchInput" type="text" class="form-control pe-5" placeholder="ค้นจาก ชื่อ-สกุล หรือท้ายเลข 13 หลัก" oninput="beforeSearch()">
+            <span id="clearBtn" onclick="clearSearchInput()">×</span>
+          </div>        
+        </div>
+        <div class="row my-2" >
+          <div class="col">  
+            <h5 id="showLength" style="color:red;"></h5>   
+            <table class="table table-striped table-hover table-responsive table-bordered">
+            <thead>
+                <tr>
+                
+                <th scope="col">CID</th>      
+                <th scope="col">ชื่อ-สกุล</th>  
+                <th scope="col">Save</th>
+                    
+                </tr>
+            </thead>
+            
+            <tbody id ="searchResults"></tbody>
+            
+            </table>
+            
+            <template id="rowTemplate">
+            
+            <tr class = "result-box">      
+                <td class ="cid" scope="row"></td>
+                <td class ="fullname"></td>
+                <td style="color:blue"><p type="button" class="edit-button">บันทึก</p></td>     
+                </tr>   
+            
+            </template> 
+          </div>        
+        </div>

@@ -1,0 +1,62 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>elder</title>
+    <link rel="stylesheet" href="public/css/bootstrap.min.css">
+    <link rel="stylesheet" href="public/css/datatables-bootstrap5-v2.css">
+    <link href="style.css" rel="stylesheet" type="text/css" />
+    <script src="public/js/popper.min.js" type="text/javascript"></script>
+    <script src="public/js/jquery-3.6.0.js" type="text/javascript"></script>
+    <!-- <script src="public/js/datatables-bootstrap5-v2.js" type="text/javascript"></script> -->
+    <script src="public/js/bootstrap.bundle.min.js" type="text/javascript"></script>
+    <script src="public/js/localforage.js" type="text/javascript"></script>
+    <script src="public/js/opencv.js"></script>
+    <script src="public/js/tesseract.min.js"></script>
+</head>
+<body>
+    <div id="navbar"></div>
+    
+    <div class="container position-relative" id="app">        
+      <div class="row my-2" >
+        <div class="col">
+            <h6>ตรวจฟันสูงอายุ</h6>
+        </div>
+      </div>
+      <section id="main_select"></section> 
+      <section id="table_app"></section>
+      <section id="detail"></section> 
+      <section id="form1"></section> 
+      <section id="form2"></section> 
+      
+      <div id = "loading">
+             <div class="spinner-grow" style="width:3rem; height: 3rem; color:#29980A;" role="status"></div>       
+             <span style="color:#E1940E">โปรดรอ....</span>        
+       </div>    
+      
+    </div>
+    
+    <link rel="stylesheet" href="public/css/jquery-ui.css">
+    <link rel="stylesheet" href="public/css/jquery-ui.theme.css">
+    <script src="public/js/jquery-ui.js" type="text/javascript"></script>
+    <script src="public/js/sweetalert2.all.min.js" type="text/javascript"></script>    
+
+    <script>
+        function include(ftxt, elid){
+           fetch(ftxt)
+            .then(res => res.text())
+            .then(html => {
+                document.getElementById(elid).innerHTML = html;
+            });
+        }
+        include('navbar.html','navbar')
+        include('main_select.html','main_select')
+        include('detail.html','detail') 
+        include('form1.html','form1') 
+        include('form2.html','form2')       
+    </script>
+
+    <script src="index.js" type="text/javascript"></script>
+    
+</body>
+</html>
