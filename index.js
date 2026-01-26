@@ -699,7 +699,7 @@
     $('#form_vhid').val(rec['vhid'])   
     $('#name').val(rec['name'])
     $('#lname').val(rec['lname'])
-    $('#cid').val(rec['cid'])
+    $('#cid').val(cidFormat(rec['cid']))
     $('#sex').val(rec['sex'])
     $('#age').val(rec['age']) 
     $('#pteeth').val(rec['pteeth'])
@@ -730,7 +730,13 @@
     $('#table_app').hide()
     $('#detail').show() 
     showNeed_pfilling()
-    addDisabledEl()
+
+    if (id && id.startsWith("tempId")) {
+      removeDisabledEl();
+    } else {
+      addDisabledEl();
+    }
+    
   }//end setRec
 
   function detailPrvBtn(){     
@@ -754,6 +760,24 @@
                         
              }
           })//then    
+  }
+
+  function cidRaw(v){
+    return String(v || "").replace(/\D/g, ""); // เอาเฉพาะตัวเลข
+  }
+
+  function cidFormat(v){
+    const raw = cidRaw(v);
+    if (raw.length === 0) return "";
+    // จำกัดไม่เกิน 13 หลัก (กัน paste เกิน)
+    const s = raw.slice(0, 13);
+    // format 1-4-5-2-1 => 3 5705 01264 59 1
+    let out = s.slice(0, 1);
+    if (s.length > 1)  out += " " + s.slice(1, 5);
+    if (s.length > 5)  out += " " + s.slice(5, 10);
+    if (s.length > 10) out += " " + s.slice(10, 12);
+    if (s.length > 12) out += " " + s.slice(12, 13);
+    return out;
   }
 
   function detailNextBtn(){
@@ -860,7 +884,7 @@
     rec['id'] = $('#id_main').val() 
     rec['cup'] = $('#form_cup').val()
     rec['vhid'] = $('#form_vhid').val() 
-    rec['cid'] = $('#cid').val()  
+    rec['cid'] = cidRaw($('#cid').val()); 
     rec['name'] = $('#name').val()
     rec['lname'] = $('#lname').val() 
     rec['fullname'] = $('#name').val() +" "+ $('#lname').val() 
@@ -922,8 +946,10 @@
     
     $('#form2').hide()
     $('#main_select').show()
+
+    await showTableAfterSubmit(rec['cid'])
     //$('#table_app').show()
-    const tr = document.querySelector('tr#ROWNUMBER\\:' + rec['id']); // ต้อง escape เครื่องหมาย :
+    /*const tr = document.querySelector('tr#ROWNUMBER\\:' + rec['id']); // ต้อง escape เครื่องหมาย :
     if (tr) {
       console.log("found tr")
       tr.querySelectorAll("td").forEach(td => {
@@ -933,8 +959,8 @@
     else{
       console.log("not found tr")
       await setTable()
-    }
-     //await setTable()       
+    }*/
+        
     removeValidate()
     document.getElementById("ocr-select").innerHTML = "" ;
     $('#takePhoto').hide()  
@@ -946,6 +972,62 @@
                      
     }) 
   }
+
+  async function showTableAfterSubmit(cid){
+     document.getElementById("showBtn").disabled = true;  
+     const cup = document.getElementById("cup").value;
+        
+     arrayOfValues.sort((a, b) => {
+        const aStartsWithTemp = a.id.startsWith("tempId");
+        const bStartsWithTemp = b.id.startsWith("tempId");
+
+        if (aStartsWithTemp && !bStartsWithTemp) {
+          return -1; // a มาก่อน
+        } else if (!aStartsWithTemp && bStartsWithTemp) {
+          return 1; // b มาก่อน
+        } else {
+          // ถ้าทั้งคู่เหมือนกัน (ทั้งคู่ขึ้นต้นด้วย tempId หรือไม่เลย)
+          return a.id.localeCompare(b.id, undefined, { numeric: true });
+        }
+     });
+
+     if(!cid){
+       return
+            
+     }
+
+     list_filter = arrayOfValues.filter(r=> r['cid'] === cid).slice(0, 20)  
+
+    let searchResultBox = document.getElementById("searchResults");
+    let templateBox = document.getElementById("rowTemplate");
+    let template = templateBox.content;
+
+    searchResultBox.innerHTML = "";
+
+    list_filter.forEach(r => {
+      let tr = template.cloneNode(true);
+      let trElement = tr.querySelector("tr");
+      let cidColumn = tr.querySelector(".cid");
+      let nameColumn = tr.querySelector(".fullname");
+      let editButton = tr.querySelector(".edit-button");
+
+      editButton.dataset.id = r['id'];
+      trElement.setAttribute("id", "ROWNUMBER:" + r['id']);
+      cidColumn.textContent = r['cid'];
+      nameColumn.textContent = r['fullname'];
+      
+      if (r['inspector'] !== "") {
+        //trElement.style.color = "#3bf405";
+        cidColumn.style.color = "#3bf405";
+        nameColumn.style.color = "#3bf405";
+        editButton.style.color = "#3bf405";
+      }
+      searchResultBox.appendChild(tr);
+    });
+    $('#showLength').html('บันทึกข้อมูลสำเร็จ')
+    document.getElementById("showBtn").disabled = false;   
+    
+  }  
 
 //=============================================================================================================
 //===========================     form2.js   =================================================================
@@ -962,7 +1044,7 @@
       return randomStr;
   }
 
-  function addRecAlert(){
+  /*function addRecAlert(){
     if(confirm("ต้องการเพิ่มข้อมูล?\nกด ตกลง เพื่อยืนยัน!")){ 
         $('#searchInput').val('')
         $('#searchResults').html('')
@@ -981,7 +1063,33 @@
         }
         
      }     
+  }*/
+
+  function addRecAlert(){
+    if(confirm("ต้องการเพิ่มข้อมูล?\nกด ตกลง เพื่อยืนยัน!")){ 
+
+      $('#searchInput').val('');
+      $('#searchResults').html('');
+      $('#showLength').html('');
+
+      const cup = $('#cup').val();
+
+      // ❌ guard: ค่าว่าง / undefined / null / select_all
+      if (!cup || cup === "select_all") {
+        Swal.fire({
+          position: 'center',
+          icon: 'error',
+          text: "โปรดเลือก รพสต.",
+          timer: 5000                     
+        });
+        return;   // ⛔ หยุดตรงนี้ ไม่ให้ addNewRec() ทำงาน
+      }
+
+      // ✅ ผ่านเงื่อนไขแล้ว ค่อยเพิ่มข้อมูล
+      addNewRec();
+    }     
   }
+
 
   function addNewRec(){
     removeValidate()         
@@ -1526,7 +1634,7 @@ startBtn.onclick=async()=>{
     const uniqcid = [...new Set(ffil)];
     console.log("unique: ", uniqcid);
 
-    let result_html = "";
+    /*let result_html = "";
     uniqcid.forEach((cid, i) => {
       const isRecommend = countMap[cid] > 1;
       const label = isRecommend ? `ใช้ค่า <span class="star">⭐</span>` : "ใช้ค่า";
@@ -1538,7 +1646,32 @@ startBtn.onclick=async()=>{
           ${cid} <span class="label">${label}</span>
         </p>
       `;
+    });*/
+    function formatCid13(cid) {
+      const raw = String(cid).replace(/\D/g, ""); // เอาเฉพาะตัวเลข
+      if (raw.length !== 13) return cid;          // ถ้าไม่ใช่ 13 หลัก ไม่ยุ่ง
+      // 3 5705 01264 59 1  => 1-4-5-2-1
+      return `${raw.slice(0,1)} ${raw.slice(1,5)} ${raw.slice(5,10)} ${raw.slice(10,12)} ${raw.slice(12)}`;
+    }
+
+    let result_html = "";
+    uniqcid.forEach((cid, i) => {
+      const rawCid = String(cid).replace(/\D/g, ""); // ค่าดิบ 13 หลัก
+      const showCid = formatCid13(rawCid);           // ค่าที่แสดง
+
+      const isRecommend = countMap[cid] > 1;
+      const label = isRecommend ? `ใช้ค่า <span class="star">⭐</span>` : "ใช้ค่า";
+      const blinkClass = isRecommend ? "blink" : "";
+
+      result_html += `
+        <p class="clickable ${blinkClass}" onclick="chooseCid(${i})">
+          <input type="hidden" id="ocrcid${i}" value="${rawCid}">
+          ${showCid} <span class="label">${label}</span>
+        </p>
+      `;
     });
+    
+
     document.getElementById("ocr-select").innerHTML = result_html;
     output.textContent = "";
     //output.textContent=`✅ พบเลข ${found.cid} จาก zone ${found.zone}, มุม ${found.angle}°`;
@@ -1557,7 +1690,7 @@ function chooseCid(i){
     cv.classList.add("cv-hide")
   });
   document.getElementById('ocr-adjust').classList.add("cv-hide")
-  document.getElementById('cid').value = cid
+  document.getElementById('cid').value = cidFormat(cid) 
   console.log("chooseCid: ",cid)
 }
 
@@ -1622,6 +1755,38 @@ function chooseCid(i){
   });  
 
  document.getElementById("app").addEventListener("click",clickEventHandler);
+
+
+ document.getElementById("cid").addEventListener("input", function (e) {
+    const el = e.target; // หรือใช้ const el = this;
+
+    // ตำแหน่ง caret เดิม
+    const oldPos = el.selectionStart || 0;
+    const oldVal = el.value || "";
+
+    // นับจำนวน "ตัวเลข" ก่อน caret เดิม
+    const digitsBefore = cidRaw(oldVal.slice(0, oldPos)).length;
+
+    // set ค่าใหม่เป็น formatted
+    el.value = cidFormat(oldVal);
+
+    // คืน caret ให้ใกล้ตำแหน่งเดิม
+    let newPos = 0, seen = 0;
+    while (newPos < el.value.length && seen < digitsBefore) {
+      if (/\d/.test(el.value[newPos])) seen++;
+      newPos++;
+    }
+
+    try {
+      el.setSelectionRange(newPos, newPos);
+    } catch (err) {
+      // บาง browser / mobile อาจไม่รองรับ ก็ปล่อยผ่าน
+    }
+  });
+
+
+
+
 
   /*window.onbeforeunload = function(event) {    
     event.preventDefault();

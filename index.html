@@ -65,7 +65,13 @@
             <div class="row my-2">                
                     <div class="col"> 
                     <label class="label_main">เลขบัตรประชาชน</label>
-                    <input type="text" pattern="\d{13}" id="cid" class="form-control" placeholder="จำเป็น" required>  
+                    <input 
+                    inputmode="numeric" 
+                    maxlength="17" type="text"
+                    pattern="\d{1} \d{4} \d{5} \d{2} \d{1}"
+                    id="cid"
+                    class="form-control" 
+                    placeholder="จำเป็น" required>  
                     <div style="text-align:left;" class = "invalid-feedback">เลข 13 หลักเท่านั้น</div>         
                     </div>         
             </div>
