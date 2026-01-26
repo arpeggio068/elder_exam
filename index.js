@@ -1785,11 +1785,8 @@ function chooseCid(i){
   });
 
 
-
-
-
-  /*window.onbeforeunload = function(event) {    
+  window.onbeforeunload = function(event) {    
     event.preventDefault();
     event.returnValue = ''; // จำเป็นสำหรับบางเบราว์เซอร์ (เช่น Chrome) 
       //return confirm('Confirm refresh');
-  };*/
+  };
