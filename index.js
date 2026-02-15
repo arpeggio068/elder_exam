@@ -833,10 +833,14 @@
   function showNeed_pfilling(){
      const pcaries = $('#pcaries').val()
      if(Number(pcaries) > 0){
-       $('#showNeed_pfilling').show()
+        $('#showNeed_pfilling').show()
      }
      else{
-       $('#showNeed_pfilling').hide()
+        const fields_need_pfilling = document.querySelectorAll('input[name="need_pfilling"]');
+        Array.prototype.forEach.call(fields_need_pfilling,function(el){               
+            el.checked = false;            
+        }); 
+        $('#showNeed_pfilling').hide()
      }
   }
 
