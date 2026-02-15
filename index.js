@@ -807,6 +807,7 @@
   }
 
   function form1NextBtn(){
+    //showNeed_pfilling()
     if(validateForm1()){
        if(checkForm1()){
          $('#form1').hide()
@@ -844,6 +845,45 @@
      }
   }
 
+  /*function showNeed_pfilling(){
+    const raw = $('#pcaries').val();
+    const pcaries = Number(raw || 0);
+
+    console.log('--- showNeed_pfilling() ---');
+    console.log('pcaries raw:', raw, '=> number:', pcaries);
+
+    const box = document.getElementById('showNeed_pfilling');
+    console.log('#showNeed_pfilling exists?', !!box);
+
+    const fields = document.querySelectorAll('input[name="need_pfilling"]');
+    console.log('checkbox found:', fields.length);
+
+    // ดูว่า checkbox อยู่ภายใน #showNeed_pfilling หรือไม่
+    if (box) {
+      console.log('checkbox inside #showNeed_pfilling:', box.querySelectorAll('input[name="need_pfilling"]').length);
+    }
+
+    if (pcaries > 0) {
+      console.log('pcaries > 0 => SHOW');
+      $('#showNeed_pfilling').show();
+      return;
+    }
+
+    console.log('pcaries <= 0 => RESET + HIDE');
+
+    fields.forEach((el, i) => {
+      console.log(`before[${i}] id=${el.id} checked=${el.checked}`);
+      el.checked = false;
+      console.log(`after [${i}] id=${el.id} checked=${el.checked}`);
+    });
+
+    // เช็คซ้ำหลัง loop
+    console.log('checked count after reset:', document.querySelectorAll('input[name="need_pfilling"]:checked').length);
+
+    $('#showNeed_pfilling').hide();
+  }*/
+
+
 
 //=============================================================================================================
 //===========================     form1.js   =================================================================
@@ -858,17 +898,7 @@
   function form2PrvBtn(){
     $('#form2').hide()
     $('#form1').show()
-  }
-
-  function showNeed_pfilling(){
-     const pcaries = $('#pcaries').val()
-     if(Number(pcaries) > 0){
-       $('#showNeed_pfilling').show()
-     }
-     else{
-       $('#showNeed_pfilling').hide()
-     }
-  }
+  }  
 
   async function beforeSubmit(){
     document.getElementById("save_btn").disabled = true; 
@@ -1248,7 +1278,8 @@
      
 
      let need_pfilling = [] // จัดการตัวเลือกแบบ checkbox
-     $('input[name="need_pfilling"]:checked').each((i,ele)=>{need_pfilling.push($(ele).val())})      
+     $('input[name="need_pfilling"]:checked').each((i,ele)=>{need_pfilling.push($(ele).val())})   
+     console.log("need_pfilling: ",need_pfilling)   
      
      let sw = true 
      switch(true){
