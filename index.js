@@ -1541,15 +1541,6 @@ async function processImage(mat,maxW,angle){
   return{...res,maxW,angle};
 }
 
-takePhotoBtn.addEventListener("click", ()=>{
-  const ctx1=c1.getContext("2d");
-  const ctx2=c2.getContext("2d");
-  ctx1.clearRect(0,0,c1.width,c1.height);
-  ctx2.clearRect(0,0,c2.width,c2.height);
-  if(srcMat){srcMat.delete();srcMat=null;}
-  fileInput.value="";
-  fileInput.click();
-});
 
 fileInput.addEventListener("change", e=>{
   const f=e.target.files[0];if(!f)return;
@@ -1585,135 +1576,215 @@ cropSelect.addEventListener("change", ()=>{
   drawCropGuides();
 });
 
-startBtn.onclick=async()=>{
+// =========================
+// OCR STOP FLAG (global)
+// =========================
+let ocrRunning = false;
+let ocrCancel  = false;
+
+// =========================
+// takePhotoBtn: cancel OCR (if running) + reset UI
+// =========================
+takePhotoBtn.addEventListener("click", ()=>{
+  // ถ้ากำลัง OCR อยู่ -> สั่งหยุด + แจ้งเตือน
+  if (ocrRunning && !ocrCancel) {
+    ocrCancel = true;
+    Swal.fire({
+      icon: "info",
+      title: "หยุดการอ่าน OCR แล้ว",
+      text: "กรุณาถ่ายภาพใหม่ให้ชัดขึ้น แล้วเริ่ม OCR อีกครั้ง",
+      timer: 1800,
+      showConfirmButton: false
+    });
+  }
+
+  output.textContent="";
+  document.getElementById("ocr-select").innerHTML = "";
+  document.getElementById('cvCanvas1').classList.add("cv-hide");
+
+  const ctx1=c1.getContext("2d");
+  const ctx2=c2.getContext("2d");
+  ctx1.clearRect(0,0,c1.width,c1.height);
+  ctx2.clearRect(0,0,c2.width,c2.height);
+
+  if(srcMat){srcMat.delete();srcMat=null;}
+
+  fileInput.value="";
+  fileInput.click();
+});
+
+
+// =========================
+// startBtn: OCR loop with cancel checks
+// =========================
+startBtn.onclick = async () => {
   if(!srcMat){output.textContent="❌ ยังไม่มีภาพ";return;}
+
+  // กันกดซ้ำ
+  if (ocrRunning) {
+    output.textContent = "⏳ กำลัง OCR อยู่...";
+    return;
+  }
+
+  // เริ่มรัน
+  ocrRunning = true;
+  ocrCancel  = false;
+
   progressContainer.style.display = "block";
   progressBar.style.width = "0%";
   progressBar.style.backgroundColor = "red";
-  output.textContent="";
-  
-  const remain=cropPercent;
-  const cut=(1-remain)/2;
-  const y1=Math.floor(srcMat.rows*cut);
-  const y2=Math.floor(srcMat.rows*(1-cut));
-  const cropHeight=y2-y1;
-  const cropRect=new cv.Rect(0,y1,srcMat.cols,cropHeight);
-  const cropped=srcMat.roi(cropRect).clone();
-  output.textContent=`⏳ start OCR...`;
-  console.log(`🟦 เริ่ม OCR ที่ crop ${(remain*100).toFixed(0)}% (${y1}-${y2})`);
-  
-  const resolutions=[800,960,1280];
-  const aspect=cropped.cols/cropped.rows;
-  const angles=(aspect>1.2)?[0]:[0,270,180,90];
-  
-  let results=[];
-  let total=resolutions.length*angles.length;
-  let done=0;
+  output.textContent = "";
 
-  for(const maxW of resolutions){
-    console.log(`\n=== 🔍 ทดลองขนาด maxW=${maxW} ===`);
-    const scale=cropped.cols>maxW?maxW/cropped.cols:1;
-    const resized=new cv.Mat();cv.resize(cropped,resized,new cv.Size(0,0),scale,scale,cv.INTER_AREA);
-    let found=false;
-    for(const a of angles){
-      if(found)break;
-      console.log(`  ▶️ หมุนภาพ ${a}°`);
-      let rot=new cv.Mat();
-      if(a===0)rot=resized.clone();
-      else if(a===90)cv.rotate(resized,rot,cv.ROTATE_90_CLOCKWISE);
-      else if(a===180)cv.rotate(resized,rot,cv.ROTATE_180);
-      else if(a===270)cv.rotate(resized,rot,cv.ROTATE_90_COUNTERCLOCKWISE);
-      const res=await processImage(rot,maxW,a);
-      results.push(res);
-      done++;
-      const percent=Math.round((done/total)*100);
-      progressBar.style.width = percent+"%";
+  let cropped = null;
 
-      // 🎨 เปลี่ยนสีตามเปอร์เซ็นต์
-      if(percent < 50){
-        // จากแดง (#ff0000) → เหลือง (#ffff00)
-        const g = Math.floor((percent / 50) * 255);
-        progressBar.style.backgroundColor = `rgb(255,${g},0)`;
-      } else {
-        // จากเหลือง (#ffff00) → เขียว (#00ff00)
-        const r = Math.floor(255 - ((percent - 50) / 50) * 255);
-        progressBar.style.backgroundColor = `rgb(${r},255,0)`;
+  try {
+    const remain=cropPercent;
+    const cut=(1-remain)/2;
+    const y1=Math.floor(srcMat.rows*cut);
+    const y2=Math.floor(srcMat.rows*(1-cut));
+    const cropHeight=y2-y1;
+    const cropRect=new cv.Rect(0,y1,srcMat.cols,cropHeight);
+    cropped=srcMat.roi(cropRect).clone();
+
+    output.textContent=`⏳ start OCR...`;
+    console.log(`🟦 เริ่ม OCR ที่ crop ${(remain*100).toFixed(0)}% (${y1}-${y2})`);
+
+    const resolutions=[800,960,1280];
+    const aspect=cropped.cols/cropped.rows;
+    const angles=(aspect>1.2)?[0]:[0,270,180,90];
+
+    let results=[];
+    let total=resolutions.length*angles.length;
+    let done=0;
+
+    for(const maxW of resolutions){
+      if (ocrCancel) break;
+
+      console.log(`\n=== 🔍 ทดลองขนาด maxW=${maxW} ===`);
+      const scale=cropped.cols>maxW?maxW/cropped.cols:1;
+
+      const resized=new cv.Mat();
+      cv.resize(cropped,resized,new cv.Size(0,0),scale,scale,cv.INTER_AREA);
+
+      try {
+        let found=false;
+
+        for(const a of angles){
+          if(found) break;
+          if (ocrCancel) break;
+
+          console.log(`  ▶️ หมุนภาพ ${a}°`);
+
+          let rot = null;
+          try {
+            rot=new cv.Mat();
+            if(a===0) rot=resized.clone();
+            else if(a===90)  cv.rotate(resized,rot,cv.ROTATE_90_CLOCKWISE);
+            else if(a===180) cv.rotate(resized,rot,cv.ROTATE_180);
+            else if(a===270) cv.rotate(resized,rot,cv.ROTATE_90_COUNTERCLOCKWISE);
+
+            if (ocrCancel) break;
+
+            const res = await processImage(rot,maxW,a);
+
+            // ⚠️ หมายเหตุ: ถ้ากดยกเลิกระหว่าง processImage/runOCR
+            // จะหยุดได้ "หลัง await กลับมา" (เพราะไม่แตะใน processImage/runOCR)
+            if (ocrCancel) break;
+
+            results.push(res);
+            done++;
+
+            const percent=Math.round((done/total)*100);
+            progressBar.style.width = percent+"%";
+
+            // 🎨 เปลี่ยนสีตามเปอร์เซ็นต์
+            if(percent < 50){
+              const g = Math.floor((percent / 50) * 255);
+              progressBar.style.backgroundColor = `rgb(255,${g},0)`;
+            } else {
+              const r = Math.floor(255 - ((percent - 50) / 50) * 255);
+              progressBar.style.backgroundColor = `rgb(${r},255,0)`;
+            }
+
+            console.log(`  ⏳ Progress ${percent}%`);
+
+            if(res.cid){
+              found=true;
+              console.log(`✅ พบเลข ${res.cid} ที่ maxW=${maxW}, angle=${a}°`);
+              break;
+            }
+
+          } finally {
+            if(rot) rot.delete(); // ✅ ลบเสมอ แม้ break ตอนเจอเลข
+          }
+        }
+      } finally {
+        resized.delete(); // ✅ ลบเสมอ
       }
-
-      console.log(`  ⏳ Progress ${percent}%`);
-      if(res.cid){
-        found=true;
-        console.log(`✅ พบเลข ${res.cid} ที่ maxW=${maxW}, angle=${a}°`);
-        break;
-      }
-      rot.delete();
-    }
-    resized.delete();
-  }
-  cropped.delete();
-  progressBar.style.width = "100%";
-  progressBar.style.backgroundColor = "rgb(0,255,0)";
-  setTimeout(()=>progressContainer.style.display="none",1200);
-  
-  const ffil = results.filter(r=>r.cid).map(r=>r.cid);  
-  console.log("filter: ",ffil)
-  
-  const found=results.find(r=>r.cid);
-  if(ffil.length > 0){
-    // นับจำนวนแต่ละค่าใน array
-    const countMap = {};
-    ffil.forEach(cid => {
-      countMap[cid] = (countMap[cid] || 0) + 1;
-    });
-
-    const uniqcid = [...new Set(ffil)];
-    console.log("unique: ", uniqcid);
-
-    /*let result_html = "";
-    uniqcid.forEach((cid, i) => {
-      const isRecommend = countMap[cid] > 1;
-      const label = isRecommend ? `ใช้ค่า <span class="star">⭐</span>` : "ใช้ค่า";
-      const blinkClass = isRecommend ? "blink" : "";
-
-      result_html += `
-        <p class="clickable ${blinkClass}" onclick="chooseCid(${i})">
-          <input type="hidden" id="ocrcid${i}" value="${cid}">
-          ${cid} <span class="label">${label}</span>
-        </p>
-      `;
-    });*/
-    function formatCid13(cid) {
-      const raw = String(cid).replace(/\D/g, ""); // เอาเฉพาะตัวเลข
-      if (raw.length !== 13) return cid;          // ถ้าไม่ใช่ 13 หลัก ไม่ยุ่ง
-      // 3 5705 01264 59 1  => 1-4-5-2-1
-      return `${raw.slice(0,1)} ${raw.slice(1,5)} ${raw.slice(5,10)} ${raw.slice(10,12)} ${raw.slice(12)}`;
     }
 
-    let result_html = "";
-    uniqcid.forEach((cid, i) => {
-      const rawCid = String(cid).replace(/\D/g, ""); // ค่าดิบ 13 หลัก
-      const showCid = formatCid13(rawCid);           // ค่าที่แสดง
+    // ถ้าถูกยกเลิก: ออกเลย ไม่สรุปผล
+    if (ocrCancel) {
+      output.textContent = "⛔ หยุดการทำงาน OCR แล้ว";
+      progressBar.style.width = "0%";
+      progressContainer.style.display = "none";
+      return;
+    }
 
-      const isRecommend = countMap[cid] > 1;
-      const label = isRecommend ? `ใช้ค่า <span class="star">⭐</span>` : "ใช้ค่า";
-      const blinkClass = isRecommend ? "blink" : "";
+    // ทำต่อแบบเดิม
+    progressBar.style.width = "100%";
+    progressBar.style.backgroundColor = "rgb(0,255,0)";
+    setTimeout(()=>progressContainer.style.display="none",1200);
 
-      result_html += `
-        <p class="clickable ${blinkClass}" onclick="chooseCid(${i})">
-          <input type="hidden" id="ocrcid${i}" value="${rawCid}">
-          ${showCid} <span class="label">${label}</span>
-        </p>
-      `;
-    });
-    
+    const ffil = results.filter(r=>r.cid).map(r=>r.cid);
+    console.log("filter: ",ffil);
 
-    document.getElementById("ocr-select").innerHTML = result_html;
-    output.textContent = "";
-    //output.textContent=`✅ พบเลข ${found.cid} จาก zone ${found.zone}, มุม ${found.angle}°`;
-    //console.log(`🎯 OCR Result: ${found.cid}`);
-  }else{
-    output.textContent=`❌ ไม่พบเลขบัตร`;
-    console.warn("❌ ไม่พบเลขบัตร");
+    if(ffil.length > 0){
+      const countMap = {};
+      ffil.forEach(cid => { countMap[cid] = (countMap[cid] || 0) + 1; });
+
+      const uniqcid = [...new Set(ffil)];
+      console.log("unique: ", uniqcid);
+
+      function formatCid13(cid) {
+        const raw = String(cid).replace(/\D/g, "");
+        if (raw.length !== 13) return cid;
+        return `${raw.slice(0,1)} ${raw.slice(1,5)} ${raw.slice(5,10)} ${raw.slice(10,12)} ${raw.slice(12)}`;
+      }
+
+      let result_html = "";
+      uniqcid.forEach((cid, i) => {
+        const rawCid = String(cid).replace(/\D/g, "");
+        const showCid = formatCid13(rawCid);
+
+        const isRecommend = countMap[cid] > 1;
+        const label = isRecommend ? `ใช้ค่า <span class="star">⭐</span>` : "ใช้ค่า";
+        const blinkClass = isRecommend ? "blink" : "";
+
+        result_html += `
+          <p class="clickable ${blinkClass}" onclick="chooseCid(${i})">
+            <input type="hidden" id="ocrcid${i}" value="${rawCid}">
+            ${showCid} <span class="label">${label}</span>
+          </p>
+        `;
+      });
+
+      document.getElementById("ocr-select").innerHTML = result_html;
+      output.textContent = "";
+    } else {
+      output.textContent=`❌ ไม่พบเลขบัตร`;
+      console.warn("❌ ไม่พบเลขบัตร");
+    }
+
+  } catch (err) {
+    console.error("error start btn", err);
+    output.textContent = "❌ เกิดข้อผิดพลาดระหว่าง OCR";
+  } finally {
+    if (cropped) cropped.delete();
+    ocrRunning = false;
+    // ไม่ต้องรีเซ็ต ocrCancel ตรงนี้ก็ได้ (ปล่อยไว้) แต่ถ้าจะรีเซ็ตให้รอบใหม่:
+    // ocrCancel = false;
+    progressContainer.style.display = "none";
   }
 };
 
