@@ -1611,6 +1611,8 @@ takePhotoBtn.addEventListener("click", ()=>{
 
   fileInput.value="";
   fileInput.click();
+
+  startBtn.disabled = false;
 });
 
 
@@ -1619,6 +1621,8 @@ takePhotoBtn.addEventListener("click", ()=>{
 // =========================
 startBtn.onclick = async () => {
   if(!srcMat){output.textContent="❌ ยังไม่มีภาพ";return;}
+
+  startBtn.disabled = true;
 
   // กันกดซ้ำ
   if (ocrRunning) {
@@ -1646,7 +1650,7 @@ startBtn.onclick = async () => {
     const cropRect=new cv.Rect(0,y1,srcMat.cols,cropHeight);
     cropped=srcMat.roi(cropRect).clone();
 
-    output.textContent=`⏳ start OCR...`;
+    output.textContent=`⏳ เริ่ม OCR...`;
     console.log(`🟦 เริ่ม OCR ที่ crop ${(remain*100).toFixed(0)}% (${y1}-${y2})`);
 
     const resolutions=[800,960,1280];
@@ -1776,6 +1780,8 @@ startBtn.onclick = async () => {
       console.warn("❌ ไม่พบเลขบัตร");
     }
 
+    startBtn.disabled = false;
+
   } catch (err) {
     console.error("error start btn", err);
     output.textContent = "❌ เกิดข้อผิดพลาดระหว่าง OCR";
@@ -1784,6 +1790,7 @@ startBtn.onclick = async () => {
     ocrRunning = false;
     // ไม่ต้องรีเซ็ต ocrCancel ตรงนี้ก็ได้ (ปล่อยไว้) แต่ถ้าจะรีเซ็ตให้รอบใหม่:
     // ocrCancel = false;
+    startBtn.disabled = false;
     progressContainer.style.display = "none";
   }
 };
