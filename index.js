@@ -88,8 +88,11 @@
         console.log("Main Elder Data removed successfully");
         // ล้าง UI
         $('#cup').html('')
-        $('#vhid').html('')     
-        $('#table_app').html('')
+        //$('#vhid').html('')     
+        //$('#table_app').html('')
+        $('#searchResults').html('')
+        $('#showLength').html('')        
+     
       } catch (error) {
         console.warn("error on remove Main elder data: ", error);
         Swal.fire({
@@ -155,7 +158,12 @@
 
   async function listElderly2(){
      document.getElementById("showBtn").disabled = true;  
+     $('#showLength').html('')
      const cup = document.getElementById("cup").value;
+     if(!cup){
+       document.getElementById("showBtn").disabled = false; 
+       return
+     }
         
      arrayOfValues.sort((a, b) => {
         const aStartsWithTemp = a.id.startsWith("tempId");
@@ -265,6 +273,9 @@
             }
             else{
               await store.removeItem("elder_data")
+              $('#cup').html('')              
+              $('#searchResults').html('') // searchResults table box
+              $('#showLength').html('')  // show exam data text
               Swal.fire({
                 position: 'center',
                 icon: 'warning',
@@ -320,7 +331,10 @@
 
             }
             else{
-              await store.removeItem("elder_data")
+              await store.removeItem("elder_data")              
+              $('#cup').html('')              
+              $('#searchResults').html('') // searchResults table box
+              $('#showLength').html('')  // show exam data text
               Swal.fire({
                 position: 'center',
                 icon: 'warning',
@@ -414,7 +428,10 @@
         timer: 2000
       });
 
-      $('#table_app').html('');
+      //$('#table_app').html(''); 
+      // reset table search result                
+      $('#searchResults').html('') // searchResults table box
+      $('#showLength').html('')  // show exam data text
     } catch (error) {
       console.error("Error in afterDropdownArrayReturned:", error);
       Swal.fire({
@@ -437,10 +454,9 @@
       // const numDays = 5 * 60 * 1000; // 5 min
 
       if (!init || !init.timestamp || (now - init.timestamp > numDays)) {
-        $('#cup').html('');
-        //$('#class_').html('');
-        //$('#room').html('');
-        //$('#table_app').html('');
+        $('#cup').html('')              
+        $('#searchResults').html('') // searchResults table box
+        $('#showLength').html('')  // show exam data text
         return true;
       } else {
         return false;
@@ -449,9 +465,8 @@
       console.warn("error on checkExpired function:", err);
       // ล้าง UI เผื่อข้อมูลผิดพลาดจริง
       $('#cup').html('');
-      //$('#class_').html('');
-      //$('#room').html('');
-      //$('#table_app').html('');
+      $('#searchResults').html('') // searchResults table box
+      $('#showLength').html('')  // show exam data text
       return true; // ให้ถือว่า expired ไปเลยเพื่อความปลอดภัย
     }
   }
@@ -544,7 +559,9 @@
 
         console.warn('Token not found or expired');
         await store.removeItem('elder_data');
-
+        $('#cup').html('') 
+        $('#searchResults').html('') // searchResults table box
+        $('#showLength').html('')  // show exam data text
         // ถ้าต้องการ redirect
         // setTimeout(() => window.location.href = "/", 5000);
       }
