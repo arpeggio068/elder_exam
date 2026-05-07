@@ -255,7 +255,7 @@
             const data = await response.json();
             console.log(data.message)
 
-            if (data.status === "success") {
+            if (data.status === "success" && data.dataAction === 'keep') {
                 await store.removeItem("all_rec_elder").then(function() {
                       console.log("Data removed successfully");
                     }).catch(function(error) {
@@ -270,6 +270,37 @@
                     timer: 3000
                 });              
 
+            }
+            else if(data.status === "success" && data.dataAction === 'delete'){
+                await store.removeItem("all_rec_elder").then(function() {
+                      console.log("Data removed successfully");
+                    }).catch(function(error) {
+                      console.log("Error while removing data: " + error);
+                    });
+                $('#val_total').text("  0");
+                Swal.fire({
+                    position: 'center',
+                    icon: 'success',
+                    text: 'อัพโหลดข้อมูลสำเร็จ!',
+                    showConfirmButton: true,
+                    timer: 2000
+                }); 
+
+                await store.removeItem("elder_data")
+                $('#cup').html('')              
+                $('#searchResults').html('') // searchResults table box
+                $('#showLength').html('')  // show exam data text
+
+                setTimeout(function(){
+                    Swal.fire({
+                    position: 'center',
+                    icon: 'warning',
+                    text: 'ระบบได้ทำการลบข้อมูลเนื่องจากลิงก์หมดอายุ',
+                    showConfirmButton: true
+                  });
+
+                },2200)
+                
             }
             else{
               await store.removeItem("elder_data")
