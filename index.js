@@ -88,10 +88,10 @@
         console.log("Main Elder Data removed successfully");
         // ล้าง UI
         $('#cup').html('')
-        //$('#vhid').html('')     
-        //$('#table_app').html('')
+        //$('#vhid').html('')        
         $('#searchResults').html('')
-        $('#showLength').html('')        
+        $('#showLength').html('')   
+        arrayOfValues = []     
      
       } catch (error) {
         console.warn("error on remove Main elder data: ", error);
@@ -106,15 +106,13 @@
 
 
   function loadAlert(){
-    let txt;
+    
     if (confirm("กด ตกลง เพื่อยืนยันการดาวน์โหลดข้อมูล!")) {
-      txt = "OK!";
+     
       loadingStart();
       elderLoad()
-    } else {
-      txt = "Cancel!";
-    }
-    //document.getElementById("demo").innerHTML = txt;
+    } 
+    
   }
 
   async function upLoad() {    
@@ -233,14 +231,21 @@
   let arrayOfValues =[];
   let all_rec_elder = [];
   let searchAllHtml = '';
+  const main_expired_time = 8 * 60 * 60 * 1000;
   var store = localforage.createInstance({
     name: "myDatabaseElderly11454"
   });   
 
   const mainUrl = 'https://script.google.com/macros/s/AKfycbzjDeMvJSWhVnhbq8juHcl3oa-m08Lut1zcqcTrmS6bH22LZi5bPz_d-196tYckGxP-/exec' 
+
+
+  function getTokenFromUrl() {
+    return new URLSearchParams(window.location.search).get("id") || "";
+  }
   
   async function saveRecord(obj){  
-        const obj_json = JSON.stringify({obj:obj,id:gId})        
+        const id = getTokenFromUrl();
+        const obj_json = JSON.stringify({obj:obj,id:id})        
         let formData = new FormData();
         formData.append('action', 'saveRecord');            
         formData.append('data', obj_json);
@@ -290,6 +295,7 @@
                 $('#cup').html('')              
                 $('#searchResults').html('') // searchResults table box
                 $('#showLength').html('')  // show exam data text
+                arrayOfValues = []
 
                 setTimeout(function(){
                     Swal.fire({
@@ -307,6 +313,8 @@
               $('#cup').html('')              
               $('#searchResults').html('') // searchResults table box
               $('#showLength').html('')  // show exam data text
+              arrayOfValues = []
+
               Swal.fire({
                 position: 'center',
                 icon: 'warning',
@@ -329,14 +337,36 @@
         }
   }
 
-  async function elderLoad() {       
-        const obj_json = JSON.stringify({id:gId})
-        //console.log("gId: ",gId)
-        let formData = new FormData();
-        formData.append('action', 'elderLoad');       
-        formData.append('data', obj_json);
+  async function elderLoad() {  
+      const id = getTokenFromUrl(); 
+        
+      if (!id || !String(id).trim().startsWith("token-")) {
+          loadingEnd();
 
-        try {
+          await store.removeItem("elder_data");
+          $('#cup').html('')              
+          $('#searchResults').html('') // searchResults table box
+          $('#showLength').html('')  // show exam data text
+          arrayOfValues = []
+
+          Swal.fire({
+            position: "center",
+            icon: "warning",
+            text: "ไม่พบรหัสลิงก์ token กรุณาเปิดจากลิงก์ที่ได้รับ",
+            showConfirmButton: true
+          });
+
+          console.log("[elderLoad] blocked: empty or invalid token");
+          return;
+      }
+
+      const obj_json = JSON.stringify({id:id})
+        //console.log("gId: ",gId)
+      let formData = new FormData();
+      formData.append('action', 'elderLoad');       
+      formData.append('data', obj_json);
+
+      try {
             const response = await fetch(mainUrl, {
                 method: 'POST',
                 redirect: "follow",
@@ -366,6 +396,8 @@
               $('#cup').html('')              
               $('#searchResults').html('') // searchResults table box
               $('#showLength').html('')  // show exam data text
+              arrayOfValues = []
+
               Swal.fire({
                 position: 'center',
                 icon: 'warning',
@@ -373,7 +405,7 @@
                 showConfirmButton: true
               });
             }
-        } catch (error) {
+      } catch (error) {
             console.error("Error:", error);
             Swal.fire({
                 position: 'center',
@@ -382,10 +414,10 @@
                 showConfirmButton: true,
                 timer: 5000
             });
-        } finally {
+      } finally {
            loadingEnd()           
            console.log('end load');
-        }
+      }
   }  
 
   async function offlineArrayReturned() {
@@ -450,16 +482,14 @@
         //afterFirstDropdownChanged();
         //afterSecondDropdownChanged();
       }
-
-      // Success message
+      
       Swal.fire({
         position: 'center',
         icon: 'success',
         text: "ดาวน์โหลดสำเร็จ",
         timer: 2000
       });
-
-      //$('#table_app').html(''); 
+      
       // reset table search result                
       $('#searchResults').html('') // searchResults table box
       $('#showLength').html('')  // show exam data text
@@ -480,7 +510,7 @@
       const lUserData = await store.getItem(item_name);
       const init = lUserData || null;
       const now = Date.now();
-      const numDays = 12 * 60 * 60 * 1000; // 12 hours
+      const numDays = main_expired_time // 12 hours
       // const numDays = 1 * 24 * 60 * 60 * 1000; // 1 day
       // const numDays = 5 * 60 * 1000; // 5 min
 
@@ -488,6 +518,7 @@
         $('#cup').html('')              
         $('#searchResults').html('') // searchResults table box
         $('#showLength').html('')  // show exam data text
+        arrayOfValues = []
         return true;
       } else {
         return false;
@@ -498,6 +529,7 @@
       $('#cup').html('');
       $('#searchResults').html('') // searchResults table box
       $('#showLength').html('')  // show exam data text
+      arrayOfValues = []
       return true; // ให้ถือว่า expired ไปเลยเพื่อความปลอดภัย
     }
   }
@@ -559,15 +591,14 @@
   async function getDataAPI(url) {
     try {
       const response = await fetch(url, {
-        method: 'GET',
-        // headers: { 'Content-Type': 'application/json' } // ไม่จำเป็นสำหรับ GET ถ้าไม่มี body
+        method: 'GET',        
       });
 
       const data = await response.json();
 
       if (data.data && data.data.length > 0) {
-        gData = data.data;
-        gId = gData[0];
+        // gData = data.data;
+        // gId = gData[0];
         console.log("Token OK:", gId);
         Swal.fire({
           position: 'center',
@@ -593,6 +624,7 @@
         $('#cup').html('') 
         $('#searchResults').html('') // searchResults table box
         $('#showLength').html('')  // show exam data text
+        arrayOfValues = []
         // ถ้าต้องการ redirect
         // setTimeout(() => window.location.href = "/", 5000);
       }
@@ -1881,26 +1913,35 @@ function chooseCid(i){
 
       const params = new URLSearchParams(window.location.search);
       const id = params.get("id");
-      //console.log("ID:", id);
       if (!id) {
-        loadingEnd();
-        console.log("No ID found in URL.");
-        return;
-      }
-      
-      gUrl = mainUrl + '?id=' + id;
+          loadingEnd();
+          console.log("[DOM] No ID found in URL.");
 
-      const LOADED_EXPIRY_MS = 12 * 60 * 60 * 1000; // 12 ชั่วโมง
+          Swal.fire({
+            position: 'center',
+            icon: 'warning',
+            text: 'ไม่พบรหัสลิงก์ token',
+            showConfirmButton: true
+          });
+
+          return;
+      }
+
+      const url = mainUrl + '?id=' + encodeURIComponent(id);      
+      
+      //gUrl = mainUrl + '?id=' + id;
+
+      const LOADED_EXPIRY_MS = main_expired_time// 8 ชั่วโมง
       const stored_exp = await store.getItem('loaded:' + id);
       const now = Date.now();
 
       if (stored_exp && stored_exp.dataLoaded && now - stored_exp.timestamp < LOADED_EXPIRY_MS) {
         console.log("✅ dom loaded not expired use localforage");
-        gId = id
+        //gId = id
         await callOffLineData()
       } else {
         console.log("⏰ dom loaded expired check API");
-        await getDataAPI(gUrl);
+        await getDataAPI(url);
         await store.setItem('loaded:' + id, {
           timestamp: now,
           dataLoaded: true

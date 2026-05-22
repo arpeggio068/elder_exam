@@ -92,87 +92,97 @@
     font-size: 0.8em;
   } 
 
-  /*.container_cb {
-    display: inline;
-    position: relative;
-    padding-left: 15px;
-    margin-bottom: 10px;
-    cursor: pointer;
-    font-size: 20px;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-    }*/
+  /* =========================
+   Custom checkbox แบบตัวเลขอยู่กลางช่อง
+   ใช้กับ need_dfilling / need_dextract
+   ========================= */
 
-    .container_cb {
-    display: inline-block; /* เปลี่ยนจาก inline เป็น inline-block เพื่อควบคุมขนาดและระยะ */
-    position: relative;
-    padding-left: 17px; /* เพิ่มจาก 15px เป็น 35px ให้เว้นที่สำหรับ checkbox */
-    margin-bottom: 10px;
-    margin-right: 15px;  /*✅ เพิ่มระยะห่างระหว่าง label */
-    cursor: pointer;
-    font-size: 20px;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
+.container_cb {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  position: relative;
+
+  width: 28px;
+  height: 28px;
+
+  margin-right: 12px;
+  margin-bottom: 12px;
+
+  padding: 0;
+
+  cursor: pointer;
+  user-select: none;
+
+  font-size: 18px;
+  font-weight: 300;
+  line-height: 1;
+
+  color: #111;
+  text-align: center;
+  vertical-align: top;
 }
 
 
-
-/* Hide the browser's default checkbox */
+/* ซ่อน checkbox จริง */
 .container_cb input {
   position: absolute;
   opacity: 0;
-  cursor: pointer;
-  height: 0;
   width: 0;
+  height: 0;
+  margin: 0;
+  pointer-events: none;
 }
 
-/* Create a custom checkbox */
+/* กล่องพื้นหลัง checkbox */
 .checkmark {
   position: absolute;
-  top: 0;
-  left: 0;
-  height: 25px;
-  width: 25px;
+  inset: 0;
+
+  width: 28px;
+  height: 28px;
+
   background-color: #eee;
+  border: 1px solid transparent;
+  border-radius: 0;
+
+  z-index: -1;
 }
 
-/* On mouse-over, add a grey background color */
-.container_cb:hover input ~ .checkmark {
-  background-color: #ccc;
+/* hover เฉพาะกรณียังไม่ได้ check */
+.container_cb:hover input:not(:checked) ~ .checkmark {
+  background-color: #ddd;
 }
 
-/* When the checkbox is checked, add a blue background */
+/* checked */
 .container_cb input:checked ~ .checkmark {
   background-color: #2196F3;
 }
 
-/* Create the checkmark/indicator (hidden when not checked) */
-.checkmark:after {
-  content: "";
-  position: absolute;
-  display: none;
+/* ตัวเลขตอน checked */
+.container_cb:has(input:checked) {
+  color: #fff;
 }
 
-/* Show the checkmark when checked */
-.container_cb input:checked ~ .checkmark:after {
-  display: none;
+/* ตอนยกเลิก check ให้กลับเป็นเทา ไม่ค้างฟ้าอ่อน */
+.container_cb input:not(:checked) ~ .checkmark {
+  background-color: #eee;
 }
 
-/* Style the checkmark/indicator */
+/* ตัดรอย focus / active จาง ๆ ที่ทำให้สับสน */
+.container_cb input:focus ~ .checkmark,
+.container_cb input:active ~ .checkmark {
+  outline: none;
+  box-shadow: none;
+}
+
+/* ไม่ต้องแสดงเครื่องหมายถูก เพราะใช้ตัวเลขเป็นตัวเลือก */
+.checkmark:after,
+.container_cb input:checked ~ .checkmark:after,
 .container_cb .checkmark:after {
-  left: 9px;
-  top: 5px;
-  width: 5px;
-  height: 10px;
-  border: solid white;
-  border-width: 0 3px 3px 0;
-  -webkit-transform: rotate(45deg);
-  -ms-transform: rotate(45deg);
-  transform: rotate(45deg);
+  display: none !important;
+  content: none !important;
 }
 
 #detail, #form1, #form2, #takePhoto{
